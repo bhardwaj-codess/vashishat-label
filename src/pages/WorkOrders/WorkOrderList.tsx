@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, ArrowRight, Loader2 } from 'lucide-react';
+import { Plus, Search, Loader2, ArrowRight } from 'lucide-react';
 import type { WorkOrder } from '../../types';
 import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
@@ -25,9 +25,10 @@ const WorkOrderList: React.FC = () => {
                     return {
                         id: item._id,
                         customerName: item.customerName || 'No Name',
-                        customerEmail: item.customerEmail,
                         customerPhone: item.customerPhone || 'No Phone',
                         customerAddress: item.customerAddress || 'No Address',
+                        clientCode: item.clientCode || '-',
+                        workOrderDate: item.woReceiveDate || item.createdAt,
                         lines: item.lines || [],
                         createdAt: item.createdAt,
                         status: item.status || 'completed'
@@ -86,10 +87,11 @@ const WorkOrderList: React.FC = () => {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-gray-50 text-gray-500">
                             <tr>
-                                <th className="px-6 py-3 font-medium">Date</th>
-                                <th className="px-6 py-3 font-medium">Customer</th>
-                                <th className="px-6 py-3 font-medium">Products</th>
-                                <th className="px-6 py-3 font-medium">Total Labels</th>
+                                <th className="px-6 py-3 font-medium">S. No.</th>
+                                <th className="px-6 py-3 font-medium">Work Order Date</th>
+                                <th className="px-6 py-3 font-medium">Client Code</th>
+                                <th className="px-6 py-3 font-medium">Client Name</th>
+                                <th className="px-6 py-3 font-medium">Address</th>
                                 <th className="px-6 py-3 font-medium text-right">Actions</th>
                             </tr>
                         </thead>
@@ -110,27 +112,28 @@ const WorkOrderList: React.FC = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredOrders.map((order) => {
-                                    const lines = order.lines || [];
-                                    const totalLabels = lines.reduce((acc, line) => acc + (line.labelPrint || 0), 0);
-                                    const productDisplay = lines.length > 1 
-                                        ? `${lines[0]?.productName || 'Unknown'} and ${lines.length - 1} more`
-                                        : lines[0]?.productName || 'No products';
-
+                                filteredOrders.map((order, index) => {
                                     return (
                                         <tr key={order.id} className="hover:bg-gray-50 group">
                                             <td className="px-6 py-4 text-gray-500">
-                                                {new Date(order.createdAt).toLocaleDateString()}
+                                                {index + 1}
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-500">
+                                                {new Date((order as any).workOrderDate).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 font-medium text-gray-900">
+                                                {(order as any).clientCode}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-gray-900">{order.customerName}</div>
-                                                <div className="text-xs text-gray-400">{order.customerPhone}</div>
+                                                <Link
+                                                    to={`/work-orders/${order.id}`}
+                                                    className="font-medium text-primary-600 hover:text-primary-800"
+                                                >
+                                                    {order.customerName}
+                                                </Link>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-500">{productDisplay}</td>
-                                            <td className="px-6 py-4">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                    {totalLabels} Labels
-                                                </span>
+                                            <td className="px-6 py-4 text-gray-500 max-w-xs truncate" title={order.customerAddress}>
+                                                {order.customerAddress}
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <Link

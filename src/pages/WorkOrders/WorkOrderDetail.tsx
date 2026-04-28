@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { ArrowLeft, Calendar, User, Phone, MapPin, Package, Download, Loader2, Mail } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Phone, MapPin, Package, Download, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
 import type { WorkOrder } from '../../types';
 
@@ -21,13 +21,15 @@ const WorkOrderDetail: React.FC = () => {
                         setOrder({
                             id: found._id,
                             customerName: found.customerName,
-                            customerEmail: found.customerEmail,
                             customerPhone: found.customerPhone,
                             customerAddress: found.customerAddress,
+                            clientCode: found.clientCode,
+                            workOrderNo: found.workOrderNo,
+                            woReceiveDate: found.woReceiveDate,
                             lines: found.lines || [],
                             createdAt: found.createdAt,
                             status: found.status
-                        });
+                        } as any);
                     }
                 } catch (err) {
                     console.error("Failed to fetch order detail", err);
@@ -73,9 +75,11 @@ const WorkOrderDetail: React.FC = () => {
 
             const customerData = {
                 customerName: order.customerName,
-                customerEmail: order.customerEmail,
                 customerPhone: order.customerPhone,
-                customerAddress: order.customerAddress
+                customerAddress: order.customerAddress,
+                clientCode: (order as any).clientCode,
+                workOrderNo: (order as any).workOrderNo,
+                woReceiveDate: (order as any).woReceiveDate
             };
 
             const blob = await api.labels.generatePdf(lines, customerData, true);
@@ -146,21 +150,11 @@ const WorkOrderDetail: React.FC = () => {
                             Customer Information
                         </h3>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <div className="space-y-1">
                                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Full Name</p>
                                 <p className="text-gray-900 font-medium">{order.customerName || 'N/A'}</p>
                             </div>
-
-                            {order.customerEmail && (
-                                 <div className="space-y-1">
-                                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Email Address</p>
-                                     <div className="flex items-center gap-2 text-gray-900 font-medium">
-                                         <Mail className="w-4 h-4 text-gray-400" />
-                                         {order.customerEmail}
-                                     </div>
-                                 </div>
-                             )}
                             
                             <div className="space-y-1">
                                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Phone Number</p>
@@ -175,6 +169,24 @@ const WorkOrderDetail: React.FC = () => {
                                 <div className="flex items-start gap-2 text-gray-900 font-medium leading-relaxed">
                                     <MapPin className="w-4 h-4 text-gray-400 mt-1 shrink-0" />
                                     {order.customerAddress || 'N/A'}
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Client Code</p>
+                                <p className="text-gray-900 font-medium">{(order as any).clientCode || 'N/A'}</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Work Order No.</p>
+                                <p className="text-gray-900 font-medium">{(order as any).workOrderNo || 'N/A'}</p>
+                            </div>
+
+                            <div className="space-y-1">
+                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">WO Receive Date</p>
+                                <div className="flex items-center gap-2 text-gray-900 font-medium">
+                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                    {(order as any).woReceiveDate ? new Date((order as any).woReceiveDate).toLocaleDateString() : 'N/A'}
                                 </div>
                             </div>
                         </div>

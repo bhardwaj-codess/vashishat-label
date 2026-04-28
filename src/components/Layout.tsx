@@ -26,11 +26,15 @@ const Layout: React.FC = () => {
         <div className="min-h-screen bg-gray-50 flex">
             {/* Sidebar */}
             <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
-                <div className="p-6 border-b border-gray-200">
-                    <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <Package className="w-8 h-8 text-primary-600" />
-                        LabelGen
-                    </h1>
+                <div className="p-6 border-b border-gray-200 flex items-center justify-center w-full min-h-[88px]">
+                    <img 
+                        src="/logo.png" 
+                        alt="Company Logo" 
+                        className="max-h-12 w-auto object-contain mx-auto"
+                        onError={(e) => {
+                            e.currentTarget.alt = 'Logo Missing';
+                        }}
+                    />
                 </div>
 
                 <nav className="flex-1 p-4 space-y-1">

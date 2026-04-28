@@ -1,6 +1,7 @@
 import type { Product } from '../types';
 
-const API_BASE_URL = 'https://label-backend-hbli.onrender.com/api';
+const isDev = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.DEV;
+const API_BASE_URL = isDev ? 'http://localhost:3000/api' : 'https://label-backend-hbli.onrender.com/api';
 
 const getHeaders = () => {
     const token = localStorage.getItem('token');
@@ -97,7 +98,7 @@ export const api = {
     labels: {
         generatePdf: async (
             lines: { productId: string; totalQuantity: number; numLabels: number; brand?: string; qty?: number }[],
-            customerData?: { customerName: string; customerPhone: string; customerAddress: string },
+            customerData?: { customerName: string; customerPhone: string; customerAddress: string; clientCode?: string; workOrderDateFrom?: string; workOrderDateTo?: string; workOrderNo?: string; woReceiveDate?: string },
             skipHistory: boolean = false
         ) => {
             const res = await handleResponse(await fetch(`${API_BASE_URL}/labels/pdf`, {

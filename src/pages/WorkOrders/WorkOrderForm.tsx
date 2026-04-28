@@ -15,9 +15,13 @@ const WorkOrderForm: React.FC = () => {
     const [isLoadingProducts, setIsLoadingProducts] = useState(true);
     const [customerData, setCustomerData] = useState({
         customerName: prefillAddress?.name || '',
-        customerEmail: prefillAddress?.email || '',
         customerPhone: prefillAddress?.phone || '',
         customerAddress: prefillAddress?.addressLine || '',
+        clientCode: '',
+        workOrderDateFrom: '',
+        workOrderDateTo: '',
+        workOrderNo: '',
+        woReceiveDate: '',
     });
 
     const [orderLines, setOrderLines] = useState<WorkOrderLine[]>([]);
@@ -26,7 +30,8 @@ const WorkOrderForm: React.FC = () => {
     const [isAddressDropdownOpen, setIsAddressDropdownOpen] = useState(false);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+    const [isGeneratingDownload, setIsGeneratingDownload] = useState(false);
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const addressDropdownRef = useRef<HTMLDivElement>(null);
@@ -78,12 +83,12 @@ const WorkOrderForm: React.FC = () => {
     };
 
     const selectAddress = (address: Address) => {
-        setCustomerData({
+        setCustomerData(prev => ({
+            ...prev,
             customerName: address.name,
-            customerEmail: address.email || '',
             customerPhone: address.phone || '',
             customerAddress: address.addressLine || '',
-        });
+        }));
         setIsAddressDropdownOpen(false);
     };
 
@@ -130,7 +135,9 @@ const WorkOrderForm: React.FC = () => {
             return;
         }
 
-        setIsGenerating(true);
+        if (preview) setIsGeneratingPreview(true);
+        else setIsGeneratingDownload(true);
+
         try {
             const lines = orderLines.map(line => ({
                 productId: line.productId,
@@ -143,9 +150,13 @@ const WorkOrderForm: React.FC = () => {
             const body = {
                 lines,
                 customerName: customerData.customerName,
-                customerEmail: customerData.customerEmail,
                 customerPhone: customerData.customerPhone,
                 customerAddress: customerData.customerAddress,
+                clientCode: customerData.clientCode,
+                workOrderDateFrom: customerData.workOrderDateFrom,
+                workOrderDateTo: customerData.workOrderDateTo,
+                workOrderNo: customerData.workOrderNo,
+                woReceiveDate: customerData.woReceiveDate,
                 skipHistory: preview
             };
 
@@ -153,8 +164,11 @@ const WorkOrderForm: React.FC = () => {
                 customerName: body.customerName,
                 customerPhone: body.customerPhone,
                 customerAddress: body.customerAddress,
-                // Passing email in customerData object
-                ...({ customerEmail: body.customerEmail } as any)
+                clientCode: body.clientCode,
+                workOrderDateFrom: body.workOrderDateFrom,
+                workOrderDateTo: body.workOrderDateTo,
+                workOrderNo: body.workOrderNo,
+                woReceiveDate: body.woReceiveDate,
             }, body.skipHistory);
             const url = URL.createObjectURL(blob);
 
@@ -179,7 +193,8 @@ const WorkOrderForm: React.FC = () => {
             console.error("Failed to generate PDF", err);
             toast.error('Failed to generate PDF');
         } finally {
-            setIsGenerating(false);
+            if (preview) setIsGeneratingPreview(false);
+            else setIsGeneratingDownload(false);
         }
     };
 
@@ -207,18 +222,18 @@ const WorkOrderForm: React.FC = () => {
                 <div className="flex gap-3">
                     <button
                         onClick={() => generatePdf(true)}
-                        disabled={isGenerating || orderLines.length === 0}
+                        disabled={isGeneratingPreview || isGeneratingDownload || orderLines.length === 0}
                         className="bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 flex items-center gap-2 hover:bg-gray-50 transition-colors disabled:opacity-50"
                     >
-                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                        {isGeneratingPreview ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                         Preview Labels
                     </button>
                     <button
                         onClick={() => generatePdf(false)}
-                        disabled={isGenerating || orderLines.length === 0}
+                        disabled={isGeneratingPreview || isGeneratingDownload || orderLines.length === 0}
                         className="bg-primary-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary-700 transition-colors disabled:opacity-50"
                     >
-                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
+                        {isGeneratingDownload ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
                         Generate & Download
                     </button>
                 </div>
@@ -258,12 +273,22 @@ const WorkOrderForm: React.FC = () => {
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Work Order No.</label>
                                 <input
-                                    type="email"
-                                    name="customerEmail"
+                                    type="text"
+                                    name="workOrderNo"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                                    value={customerData.customerEmail}
+                                    value={customerData.workOrderNo}
+                                    onChange={handleCustomerChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">WO Receive Date</label>
+                                <input
+                                    type="date"
+                                    name="woReceiveDate"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                                    value={customerData.woReceiveDate}
                                     onChange={handleCustomerChange}
                                 />
                             </div>
@@ -283,6 +308,36 @@ const WorkOrderForm: React.FC = () => {
                                     name="customerAddress"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none h-[42px] resize-none"
                                     value={customerData.customerAddress}
+                                    onChange={handleCustomerChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Client Code</label>
+                                <input
+                                    type="text"
+                                    name="clientCode"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                                    value={customerData.clientCode}
+                                    onChange={handleCustomerChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Work Order Date (From)</label>
+                                <input
+                                    type="date"
+                                    name="workOrderDateFrom"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                                    value={customerData.workOrderDateFrom}
+                                    onChange={handleCustomerChange}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Work Order Date (To)</label>
+                                <input
+                                    type="date"
+                                    name="workOrderDateTo"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                                    value={customerData.workOrderDateTo}
                                     onChange={handleCustomerChange}
                                 />
                             </div>

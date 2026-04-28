@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
-import { Package } from 'lucide-react';
 import { api } from '../services/api';
 
 const Login: React.FC = () => {
@@ -37,8 +36,15 @@ const Login: React.FC = () => {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                        <Package className="w-8 h-8 text-primary-600" />
+                    <div className="flex items-center justify-center w-full min-h-[64px] mb-4">
+                        <img 
+                            src="/logo.png" 
+                            alt="Company Logo" 
+                            className="max-h-16 w-auto object-contain mx-auto"
+                            onError={(e) => {
+                                e.currentTarget.alt = 'Logo Missing';
+                            }}
+                        />
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
                     <p className="text-gray-500 mt-2">Sign in to manage labels</p>

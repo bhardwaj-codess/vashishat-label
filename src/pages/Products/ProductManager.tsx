@@ -126,8 +126,9 @@ const ProductManager: React.FC = () => {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-gray-50 text-gray-500">
                             <tr>
-                                <th className="px-6 py-3 font-medium">Product Name</th>
+                                <th className="px-6 py-3 font-medium">S. No.</th>
                                 <th className="px-6 py-3 font-medium">SKU</th>
+                                <th className="px-6 py-3 font-medium">Product Name</th>
                                 <th className="px-6 py-3 font-medium">Description</th>
                                 <th className="px-6 py-3 font-medium text-right">Actions</th>
                             </tr>
@@ -135,7 +136,7 @@ const ProductManager: React.FC = () => {
                         <tbody className="divide-y divide-gray-200">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         <div className="flex items-center justify-center gap-2">
                                             <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
                                             Loading products...
@@ -144,15 +145,16 @@ const ProductManager: React.FC = () => {
                                 </tr>
                             ) : filteredProducts.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                         No products found. Add one to get started.
                                     </td>
                                 </tr>
                             ) : (
-                                filteredProducts.map((product) => (
+                                filteredProducts.map((product, index) => (
                                     <tr key={product.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 font-medium text-gray-900">{product.name}</td>
+                                        <td className="px-6 py-4 text-gray-500">{index + 1}</td>
                                         <td className="px-6 py-4 text-gray-500">{product.sku || '-'}</td>
+                                        <td className="px-6 py-4 font-medium text-gray-900">{product.name}</td>
                                         <td className="px-6 py-4 text-gray-500 truncate max-w-xs">{product.description || '-'}</td>
                                         <td className="px-6 py-4 text-right flex justify-end gap-2">
                                             <button
