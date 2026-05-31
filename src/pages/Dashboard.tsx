@@ -1,52 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Package, Truck, FileText, Plus, ArrowRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { api } from '../services/api';
+import { useData } from '../context/DataContext';
 import type { WorkOrder } from '../types';
 
 const Dashboard: React.FC = () => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [stats, setStats] = useState({
-        totalOrders: 0,
-        totalProducts: 0,
-        totalAddresses: 0,
-        recentOrders: [] as WorkOrder[]
-    });
+    const { products, history, addresses, isLoadingProducts, isLoadingHistory, isLoadingAddresses } = useData();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [history, products] = await Promise.all([
-                    api.history.list(),
-                    api.products.list()
-                ]);
+    const isLoading = isLoadingProducts || isLoadingHistory || isLoadingAddresses;
 
-                // We don't have a direct address list API in the current snippet but we can count from history or leave at 0
-                // For now let's focus on integrating the history API properly
-                const formattedHistory: WorkOrder[] = history.map((item: any) => ({
-                    id: item._id,
-                    customerName: item.customerName,
-                    customerPhone: item.customerPhone,
-                    customerAddress: item.customerAddress,
-                    lines: item.lines || [],
-                    createdAt: item.createdAt,
-                    status: item.status
-                }));
+    const formattedHistory: WorkOrder[] = history.map((item: any) => ({
+        id: item._id,
+        customerName: item.customerName || 'No Name',
+        customerPhone: item.customerPhone || 'No Phone',
+        customerAddress: item.customerAddress || 'No Address',
+        lines: item.lines || [],
+        createdAt: item.createdAt,
+        status: item.status || 'completed'
+    }));
 
-                setStats({
-                    totalOrders: formattedHistory.length,
-                    totalProducts: products.length,
-                    totalAddresses: 0, // Need address API if desired
-                    recentOrders: formattedHistory.slice(0, 5)
-                });
-            } catch (err) {
-                console.error("Failed to fetch dashboard data", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+    const stats = {
+        totalOrders: formattedHistory.length,
+        totalProducts: products.length,
+        totalAddresses: addresses.length,
+        recentOrders: formattedHistory.slice(0, 5)
+    };
 
     return (
         <div className="space-y-8">

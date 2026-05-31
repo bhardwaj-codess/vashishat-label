@@ -93,6 +93,24 @@ export const api = {
             }));
             if (!res.ok) throw new Error('Failed to delete product');
             return res.json();
+        },
+        import: async (file: File) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            const token = localStorage.getItem('token');
+            const res = await handleResponse(await fetch(`${API_BASE_URL}/products/import`, {
+                method: 'POST',
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    // Leave Content-Type empty! The browser resolves boundary strings.
+                },
+                body: formData,
+            }));
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.message || 'Failed to import products');
+            }
+            return res.json();
         }
     },
     labels: {

@@ -1,50 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Search, Loader2, ArrowRight } from 'lucide-react';
 import type { WorkOrder } from '../../types';
-import { api } from '../../services/api';
 import { Link } from 'react-router-dom';
+import { useData } from '../../context/DataContext';
 
 const WorkOrderList: React.FC = () => {
-    const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
+    const { history, isLoadingHistory: isLoading } = useData();
     const [searchTerm, setSearchTerm] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchHistory = async () => {
-            try {
-                console.log("Fetching work order history...");
-                const data = await api.history.list();
-                console.log("Received history data:", data);
-                
-                // Map API data to WorkOrder type if needed
-                const formattedData: WorkOrder[] = data.map((item: any) => {
-                    // Log individual item if it's missing lines to debug
-                    if (!item.lines || item.lines.length === 0) {
-                        console.warn("History item missing lines:", item);
-                    }
-                    return {
-                        id: item._id,
-                        customerName: item.customerName || 'No Name',
-                        customerPhone: item.customerPhone || 'No Phone',
-                        customerAddress: item.customerAddress || 'No Address',
-                        clientCode: item.clientCode || '-',
-                        workOrderDate: item.woReceiveDate || item.createdAt,
-                        lines: item.lines || [],
-                        createdAt: item.createdAt,
-                        status: item.status || 'completed'
-                    };
-                });
-                
-                console.log("Formatted history data:", formattedData);
-                setWorkOrders(formattedData);
-            } catch (err) {
-                console.error("Failed to fetch history in component:", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchHistory();
-    }, []);
+    const workOrders: WorkOrder[] = history.map((item: any) => ({
+        id: item._id,
+        customerName: item.customerName || 'No Name',
+        customerPhone: item.customerPhone || 'No Phone',
+        customerAddress: item.customerAddress || 'No Address',
+        clientCode: item.clientCode || '-',
+        workOrderDate: item.woReceiveDate || item.createdAt,
+        lines: item.lines || [],
+        createdAt: item.createdAt,
+        status: item.status || 'completed'
+    }));
 
     const filteredOrders = workOrders
         .filter((order) =>

@@ -1,43 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, Search, Printer, Loader2, Mail, Phone, MapPin, User, X, Pencil } from 'lucide-react';
 import { toast } from 'react-toastify';
 import type { Address } from '../../types';
 import { api } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useData } from '../../context/DataContext';
 
 const AddressManager: React.FC = () => {
-    const [addresses, setAddresses] = useState<Address[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { addresses, isLoadingAddresses: isLoading, reloadAddresses } = useData();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [formData, setFormData] = useState<Partial<Address>>({ name: '', email: '', addressLine: '', phone: '' });
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
-
-    useEffect(() => {
-        loadAddresses();
-    }, []);
-
-    const loadAddresses = async () => {
-        setIsLoading(true);
-        try {
-            const data = await api.addresses.list();
-            const formattedData: Address[] = data.map((item: any) => ({
-                id: item._id,
-                name: item.name,
-                email: item.email,
-                phone: item.phone_number,
-                addressLine: item.address
-            }));
-            setAddresses(formattedData);
-        } catch (err) {
-            console.error("Failed to load addresses", err);
-            toast.error('Failed to load addresses');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleOpenModal = (address?: Address) => {
         if (address) {
@@ -69,28 +45,13 @@ const AddressManager: React.FC = () => {
             };
 
             if (editingAddress) {
-                const updated = await api.addresses.update(editingAddress.id, payload);
-                const formatted: Address = {
-                    id: updated._id,
-                    name: updated.name,
-                    email: updated.email,
-                    phone: updated.phone_number,
-                    addressLine: updated.address
-                };
-                setAddresses(prev => prev.map(a => a.id === formatted.id ? formatted : a));
+                await api.addresses.update(editingAddress.id, payload);
                 toast.success('Address updated successfully');
             } else {
-                const created = await api.addresses.create(payload);
-                const formatted: Address = {
-                    id: created._id,
-                    name: created.name,
-                    email: created.email,
-                    phone: created.phone_number,
-                    addressLine: created.address
-                };
-                setAddresses(prev => [formatted, ...prev]);
+                await api.addresses.create(payload);
                 toast.success('Address created successfully');
             }
+            await reloadAddresses();
             handleCloseModal();
         } catch (err) {
             console.error("Failed to save address", err);
@@ -104,8 +65,8 @@ const AddressManager: React.FC = () => {
         if (window.confirm('Are you sure you want to delete this address?')) {
             try {
                 await api.addresses.delete(id);
-                setAddresses(prev => prev.filter((a) => a.id !== id));
                 toast.success('Address deleted successfully');
+                await reloadAddresses();
             } catch (err) {
                 console.error("Failed to delete address", err);
                 toast.error('Failed to delete address');

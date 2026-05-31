@@ -4,15 +4,16 @@ import { toast } from 'react-toastify';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import type { Product, Address, WorkOrderLine } from '../../types';
 import { api } from '../../services/api';
+import { useData } from '../../context/DataContext';
 
 const WorkOrderForm: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const prefillAddress = (location.state as any)?.prefillAddress as Address | undefined;
 
-    const [allProducts, setAllProducts] = useState<Product[]>([]);
-    const [allAddresses, setAllAddresses] = useState<Address[]>([]);
-    const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+    const { products: allProducts, addresses: allAddresses, isLoadingProducts: dataLoading, reloadHistory } = useData();
+    const isLoadingProducts = dataLoading;
+
     const [customerData, setCustomerData] = useState({
         customerName: prefillAddress?.name || '',
         customerPhone: prefillAddress?.phone || '',
@@ -35,30 +36,6 @@ const WorkOrderForm: React.FC = () => {
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const addressDropdownRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [fetchedProducts, fetchedAddresses] = await Promise.all([
-                    api.products.list(),
-                    api.addresses.list()
-                ]);
-                setAllProducts(fetchedProducts);
-                setAllAddresses(fetchedAddresses.map((a: any) => ({
-                    id: a._id,
-                    name: a.name,
-                    email: a.email,
-                    phone: a.phone_number || a.phone,
-                    addressLine: a.address || a.addressLine
-                })));
-            } catch (err) {
-                console.error("Failed to load data", err);
-            } finally {
-                setIsLoadingProducts(false);
-            }
-        };
-        fetchData();
-    }, []);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -187,6 +164,7 @@ const WorkOrderForm: React.FC = () => {
 
                 toast.success('Labels generated and download started');
                 // No need to manually save to storage anymore, as the backend now handles history
+                await reloadHistory();
                 navigate('/work-orders');
             }
         } catch (err) {

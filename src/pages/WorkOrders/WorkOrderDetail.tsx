@@ -3,43 +3,36 @@ import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { ArrowLeft, Calendar, User, Phone, MapPin, Package, Download, Loader2 } from 'lucide-react';
 import { api } from '../../services/api';
+import { useData } from '../../context/DataContext';
 import type { WorkOrder } from '../../types';
 
 const WorkOrderDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const { history, isLoadingHistory } = useData();
     const [order, setOrder] = useState<WorkOrder | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchOrder = async () => {
-            if (id) {
-                try {
-                    const history = await api.history.list();
-                    const found = history.find((h: any) => h._id === id);
-                    if (found) {
-                        setOrder({
-                            id: found._id,
-                            customerName: found.customerName,
-                            customerPhone: found.customerPhone,
-                            customerAddress: found.customerAddress,
-                            clientCode: found.clientCode,
-                            workOrderNo: found.workOrderNo,
-                            woReceiveDate: found.woReceiveDate,
-                            lines: found.lines || [],
-                            createdAt: found.createdAt,
-                            status: found.status
-                        } as any);
-                    }
-                } catch (err) {
-                    console.error("Failed to fetch order detail", err);
-                } finally {
-                    setIsLoading(false);
-                }
+        if (id && history.length > 0) {
+            const found = history.find((h: any) => h._id === id);
+            if (found) {
+                setOrder({
+                    id: found._id,
+                    customerName: found.customerName,
+                    customerPhone: found.customerPhone,
+                    customerAddress: found.customerAddress,
+                    clientCode: found.clientCode,
+                    workOrderNo: found.workOrderNo,
+                    woReceiveDate: found.woReceiveDate,
+                    lines: found.lines || [],
+                    createdAt: found.createdAt,
+                    status: found.status
+                } as any);
             }
-        };
-        fetchOrder();
-    }, [id]);
+        }
+    }, [id, history]);
+
+    const isLoading = isLoadingHistory && history.length === 0;
 
     if (isLoading) {
         return (
